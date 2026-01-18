@@ -27,14 +27,29 @@ class NewsAI:
             return None
 
         prompt = f"""
-        Analyze the following IT news article and extract/generate the required information in JSON format.
+        Analyze the following technical article and extract the required information in JSON format.
+
+        CRITICAL: This scraper is STRICTLY for an assumption-free "IT Job Hub" for developers and software engineers.
+        We ONLY want news related to:
+        - Programming languages and frameworks (Python, JS, Rust, React, etc.)
+        - Software development practices (Architecture, Agile, Testing)
+        - DevOps, Cloud (AWS/Azure/GCP), and Infrastructure
+        - Cybersecurity (technical)
+        - Artificial Intelligence & Machine Learning (technical/development focus)
+        - Database technologies
+
+        EXCLUDE specifically:
+        - Consumer electronics (Phones, Laptops, Headphones, Electric Bikes, Gadgets)
+        - General "Tech" news (Social media policy, generic business news, video games)
+        - Science news unrelated to computing
 
         Title: {title}
-        Content Snippet: {content[:3000]} # Limit content to avoid token limits
+        Content Snippet: {content[:3000]}
 
         Output Fields:
+        - is_relevant: Boolean (true if it matches the inclusion criteria above, false otherwise).
         - summary: A concise summary of the article (max 2-3 sentences) in the same language of the article.
-        - category: The primary category (e.g., "AI", "DevOps", "Cybersecurity", "Development", "Cloud", "Hardware", "Mobile", "Data Science", "Blockchain", "General").
+        - category: The primary category (e.g., "AI", "DevOps", "Cybersecurity", "Development", "Cloud", "Data Science", "Blockchain").
         - tags: A list of relevant technical tags (max 5).
         - language: The language of the article ("en", "it", etc.).
         - sentiment: "positive", "neutral", or "negative".

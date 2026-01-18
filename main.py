@@ -93,8 +93,9 @@ def main():
                 logger.warning(
                     f"AI processing failed for {article['title']}. key content: {article['content_raw'][:50]}..."
                 )
-                # Fallback or skip? Let's skip for now or provide defaults
+                # Fallback
                 ai_data = {
+                    "is_relevant": True,  # Assume relevant on failure to be safe, or set False to be strict
                     "summary": article["content_raw"][:200] + "...",
                     "category": "General",
                     "tags": [],
@@ -102,13 +103,18 @@ def main():
                     "sentiment": "neutral",
                 }
 
+            if ai_data.get("is_relevant") is False:
+                logger.info(f"Skipping irrelevant article (AI): {article['title']}")
+                continue
+
             # Merge data
             full_article = {
                 **article,
                 **ai_data,
                 "slug": generate_slug(article["title"]),
-                "views": 0,
-                "likes": 0,
+                "views_count": 0,  # align with prisma schema (views_count, not views)
+                "clicks_count": 0,  # align with prisma schema (clicks_count, not likes which is a relation or handled differently)
+                "is_published": True,
             }
 
             # Save
