@@ -12,6 +12,23 @@ class NewsScraper:
     def __init__(self):
         self.headers = {"User-Agent": "ITJobHub-NewsScraper/1.0"}
 
+    def _clean_html(self, html_content: str) -> str:
+        """Strips HTML tags and returns clean text."""
+        if not html_content:
+            return ""
+        soup = BeautifulSoup(html_content, "html.parser")
+        # Remove script and style elements
+        for script_or_style in soup(["script", "style"]):
+            script_or_style.decompose()
+
+        # Get text, using newline as separator for block elements
+        text = soup.get_text(separator="\n")
+
+        # Clean up whitespace
+        lines = (line.strip() for line in text.splitlines())
+        # Re-join with single newlines
+        return "\n".join(line for line in lines if line)
+
     def fetch_feed(self, url: str) -> List[Dict[str, Any]]:
         """Fetches and parses an RSS feed using BeautifulSoup."""
         logger.info(f"Fetching feed: {url}")
@@ -124,6 +141,7 @@ class NewsScraper:
                 "source_url": link,
                 "source_name": source_name,
                 "content_raw": content,
+                "content": self._clean_html(content),
                 "author": author,
                 "published_at": published_at,
                 "guid": guid,
