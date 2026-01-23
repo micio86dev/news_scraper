@@ -101,6 +101,15 @@ def main():
                     "tags": [],
                     "language": "en",
                     "sentiment": "neutral",
+                    # Add dummy translations for testing/fallback integrity
+                    "translations": [
+                        {"language": "it", "title": f"[IT] {article['title']}", "summary": "Sommario automatico", "content": "Contenuto tradotto automaticamente."},
+                        {"language": "es", "title": f"[ES] {article['title']}", "summary": "Resumen automático", "content": "Contenido traducido automáticamente."},
+                        {"language": "fr", "title": f"[FR] {article['title']}", "summary": "Résumé automatique", "content": "Contenu traduit automatiquement."},
+                        {"language": "de", "title": f"[DE] {article['title']}", "summary": "Automatische Zusammenfassung", "content": "Automatisch übersetzter Inhalt."},
+                         # English is strictly the original, but schema says up to 5 langs
+                        {"language": "en", "title": article['title'], "summary": article["content_raw"][:200], "content": "Original Content"}
+                    ]
                 }
 
             if ai_data.get("is_relevant") is False:
