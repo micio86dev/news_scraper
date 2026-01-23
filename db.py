@@ -46,6 +46,10 @@ class Database:
                 slug = re.sub(r"[^a-z0-9]+", "-", slug).strip("-")
                 article["slug"] = f"{slug}-{int(datetime.now().timestamp())}"
 
+            # Ensure translations is handled if present (optional validation)
+            if "translations" not in article:
+                article["translations"] = []
+
             result = self.collection.insert_one(article)
             logger.info(
                 f"Saved article: {article.get('title', 'Unknown')} (ID: {result.inserted_id})"

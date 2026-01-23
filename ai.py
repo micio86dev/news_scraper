@@ -48,11 +48,17 @@ class NewsAI:
 
         Output Fields:
         - is_relevant: Boolean (true if it matches the inclusion criteria above, false otherwise).
-        - summary: A concise summary of the article (max 2-3 sentences) in the same language of the article.
+        - summary: A concise summary of the article (max 2-3 sentences) in the original language.
         - category: The primary category (e.g., "AI", "DevOps", "Cybersecurity", "Development", "Cloud", "Data Science", "Blockchain").
         - tags: A list of relevant technical tags (max 5).
         - language: The language of the article ("en", "it", etc.).
         - sentiment: "positive", "neutral", or "negative".
+        - translations: An array of objects, one for each supported language (en, it, es, de, fr). 
+          Each object must have:
+            - language: "en" | "it" | "es" | "de" | "fr"
+            - title: Translated title
+            - summary: Translated summary
+            - content: A translated version of the main content/summary (2-3 paragraphs max)
 
         Return ONLY valid JSON.
         """
