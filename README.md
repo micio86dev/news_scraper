@@ -4,7 +4,7 @@ Standalone Python scraper to fetch, categorize, and store IT news articles into 
 
 ## Features
 - Fetches news from RSS feeds or direct URLs.
-- Uses OpenAI to categorize and tag articles.
+- Uses OpenAI to categorize, tag, and translate articles (IT, ES, FR, DE, EN).
 - Checks for duplicates in MongoDB to avoid reposting.
 - Supports dry-run mode for testing.
 
