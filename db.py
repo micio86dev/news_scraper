@@ -25,7 +25,9 @@ class Database:
 
     def _ensure_indexes(self):
         """Creates necessary indexes for the news collection."""
-        self.collection.create_index([("source_url", ASCENDING)], unique=True)
+        self.collection.create_index(
+            [("source_url", ASCENDING)], unique=True, sparse=True
+        )
         self.collection.create_index([("published_at", DESCENDING)])
         self.collection.create_index([("category", ASCENDING)])
         self.collection.create_index([("slug", ASCENDING)], unique=True)
