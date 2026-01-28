@@ -25,12 +25,15 @@ class Database:
 
     def _ensure_indexes(self):
         """Creates necessary indexes for the news collection."""
-        self.collection.create_index(
-            [("source_url", ASCENDING)], unique=True, sparse=True
-        )
-        self.collection.create_index([("published_at", DESCENDING)])
-        self.collection.create_index([("category", ASCENDING)])
-        self.collection.create_index([("slug", ASCENDING)], unique=True)
+        try:
+            self.collection.create_index(
+                [("source_url", ASCENDING)], unique=True, sparse=True
+            )
+            self.collection.create_index([("published_at", DESCENDING)])
+            self.collection.create_index([("category", ASCENDING)])
+            self.collection.create_index([("slug", ASCENDING)], unique=True)
+        except Exception as e:
+            logger.warning(f"Index creation failed (non-fatal): {e}")
 
     def is_duplicate(self, url: str) -> bool:
         """Checks if an article with the given URL already exists."""
