@@ -44,7 +44,7 @@ class NewsAI:
         - Science news unrelated to computing
 
         Title: {title}
-        Content Snippet: {content[:3000]}
+        Content: {content[:10000]}
 
         Output Fields:
         - is_relevant: Boolean (true if it matches the inclusion criteria above, false otherwise).
@@ -53,12 +53,14 @@ class NewsAI:
         - tags: A list of relevant technical tags (max 5).
         - language: The language of the article ("en", "it", etc.).
         - sentiment: "positive", "neutral", or "negative".
-        - translations: An array of objects, one for each supported language (en, it, es, de, fr). 
-          Each object must have:
+        - translations: An array of exactly 5 objects, one for each supported language: en, it, es, de, fr. 
+          CRITICAL: YOU MUST INCLUDE ALL 5 LANGUAGES (EN, IT, ES, DE, FR) IN THE LIST WITHOUT EXCEPTION. 
+          Even if the original article is in English, you MUST include an "en" entry with the original content.
+          Each language object must have:
             - language: "en" | "it" | "es" | "de" | "fr"
             - title: Translated title
             - summary: Translated summary
-            - content: A translated version of the main content/summary (2-3 paragraphs max)
+            - content: A detailed, full-length translated version of the article body. Use Markdown for formatting (headers, lists, bold text) where appropriate to make it readable.
 
         Return ONLY valid JSON.
         """

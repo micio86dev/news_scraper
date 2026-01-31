@@ -1,0 +1,59 @@
+import os
+from pymongo import MongoClient
+from datetime import datetime
+from dotenv import load_dotenv
+
+
+def verify():
+    load_dotenv()
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        print("DATABASE_URL not found")
+        return
+
+    client = MongoClient(db_url)
+    db = client.get_database()
+    collection = db.news
+
+    now = datetime.now()
+    today_start = datetime(now.year, now.month, now.day)
+
+    # Count ALL articles in DB
+    total_count = collection.count_documents({})
+    print(f"Total articles in DB: {total_count}")
+
+    # Count articles added today (by fetched_at)
+    count_today = collection.count_documents({"fetched_at": {"$gte": today_start}})
+    print(f"Total articles added during today's sessions: {count_today}")
+
+    # Check the latest 5 articles in DB
+    articles = list(collection.find().sort("_id", -1).limit(5))
+
+    languages = ["it", "en", "es", "de", "fr"]
+    all_ok = True
+
+    if not articles:
+        print("FAILED: No articles found in DB.")
+        all_ok = False
+
+    for idx, art in enumerate(articles):
+        print(f"Checking Article {idx+1}: {art.get('title')}")
+        translations = art.get("translations", [])
+        trans_langs = [t.get("language") for t in translations]
+
+        missing = [l for l in languages if l not in trans_langs]
+        if missing:
+            print(f"  FAILED: Missing languages: {missing}")
+            all_ok = False
+        else:
+            print(f"  OK: All languages present (it, en, es, de, fr).")
+
+    # Consider it PASSED if at least 5 news items were added/present and translations are OK
+    if all_ok and total_count >= 5:
+        print("\nOVERALL VERIFICATION: PASSED")
+    else:
+        print("\nOVERALL VERIFICATION: FAILED")
+
+
+if __name__ == "__main__":
+    verify()

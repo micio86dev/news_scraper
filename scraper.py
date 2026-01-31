@@ -10,7 +10,39 @@ logger = logging.getLogger(__name__)
 
 class NewsScraper:
     def __init__(self):
-        self.headers = {"User-Agent": "ITJobHub-NewsScraper/1.0"}
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+
+    def fetch_full_content(self, url: str) -> str:
+        """Fetches the full HTML of a page and extracts the main content."""
+        logger.info(f"Fetching full content from: {url}")
+        try:
+            response = requests.get(url, headers=self.headers, timeout=15)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.content, "html.parser")
+
+            # Remove noise
+            for tag in soup(["script", "style", "nav", "header", "footer", "aside"]):
+                tag.decompose()
+
+            # Strategy 1: Look for common article containers
+            article = soup.find("article")
+            if not article:
+                # Strategy 2: Look for common class/id patterns
+                article = soup.find(
+                    class_=lambda x: x
+                    and ("content" in x or "post" in x or "article" in x)
+                )
+
+            if article:
+                return self._clean_html(str(article))
+
+            # Fallback: Cleaned body
+            return self._clean_html(str(soup.body))
+        except Exception as e:
+            logger.error(f"Error fetching full content from {url}: {e}")
+            return ""
 
     def _clean_html(self, html_content: str) -> str:
         """Strips HTML tags and returns clean text."""
@@ -107,13 +139,26 @@ class NewsScraper:
                     # Try RFC 822 (RSS)
                     published_at = parsedate_to_datetime(date_str)
                 except:
-                    # Try ISO 8601 (Atom) - simplified
+                    # Try ISO 8601 (Atom) and other formats
                     try:
-                        from dateutil import parser
+                        clean_date = date_str.replace("Z", "+00:00")
+                        published_at = datetime.fromisoformat(clean_date)
+                    except Exception as e:
+                        logger.warning(f"Failed to parse date '{date_str}': {e}")
+                        # Fallback to regex for YYYY-MM-DD
+                        import re
 
-                        published_at = parser.parse(date_str)
-                    except:
-                        pass  # Keep now()
+                        match = re.search(r"(\d{4}-\d{2}-\d{2})", date_str)
+                        if match:
+                            published_at = datetime.strptime(match.group(1), "%Y-%m-%d")
+                        else:
+                            published_at = datetime.now()
+                        logger.warning(f"Failed to parse date '{date_str}': {e}")
+                        published_at = datetime.now()
+
+            # Ensure timezone-aware datetime is converted to naive UTC for consistent comparison if needed
+            # or Ensure it's compared correctly. For now, let's keep it and handle in main.py.
+            # If the published_at has no tzinfo, it's naive.
 
             # Ensure timezone-aware datetime is converted to naive or handled consistently if needed
             # For simplicity, we keep it as is, MongoDB handles dates well.

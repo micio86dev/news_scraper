@@ -36,9 +36,22 @@ python main.py
 
 **Options:**
 - `--dry-run`: Fetch and process articles but do not save to DB.
-- `--limit <number>`: Limit the number of articles to process (default: 10).
+- `--limit <number>`: Maximum number of articles to *fetch* from sources (default: 10).
+- `--target <number>`: Target number of *new relevant* articles to save (default: 5).
+- `--today-only <bool>`: Only process articles published today (default: True).
 - `--source <url>`: Override configured sources with a specific URL.
 
 ```bash
-python main.py --dry-run --limit 5
+# Example: Fetch 5 news from today with all translations
+python main.py --target 5 --today-only True
 ```
+
+## Localization
+The scraper automatically generates translations for:
+- **Italian (it)**
+- **English (en)**
+- **Spanish (es)**
+- **French (fr)**
+- **German (de)**
+
+Each article is verified for completeness before being saved to the database.
