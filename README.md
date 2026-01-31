@@ -1,4 +1,4 @@
-# IT Job Hub - News Scraper
+# DevBoards.io - News Scraper
 
 Standalone Python scraper to fetch, categorize, and store IT news articles into MongoDB.
 

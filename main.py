@@ -27,7 +27,7 @@ def main():
     load_dotenv()
 
     # Parse CLI Arguments
-    parser = argparse.ArgumentParser(description="IT Job Hub News Scraper")
+    parser = argparse.ArgumentParser(description="DevBoards.io News Scraper")
     parser.add_argument(
         "--dry-run", action="store_true", help="Run without saving to DB"
     )

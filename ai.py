@@ -29,7 +29,7 @@ class NewsAI:
         prompt = f"""
         Analyze the following technical article and extract the required information in JSON format.
 
-        CRITICAL: This scraper is STRICTLY for an assumption-free "IT Job Hub" for developers and software engineers.
+        CRITICAL: This scraper is STRICTLY for an assumption-free "DevBoards.io" for developers and software engineers.
         We ONLY want news related to:
         - Programming languages and frameworks (Python, JS, Rust, React, etc.)
         - Software development practices (Architecture, Agile, Testing)
