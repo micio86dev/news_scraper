@@ -37,7 +37,10 @@ def verify():
             fallback_url = db_url.replace("27017", "27018")
             try:
                 client = MongoClient(
-                    fallback_url, serverSelectionTimeoutMS=5000, directConnection=True
+                    fallback_url,
+                    serverSelectionTimeoutMS=5000,
+                    directConnection=True,
+                    authSource="admin",
                 )
                 client.admin.command("ping")
                 print("✅ Fallback connection to localhost:27018 successful")
