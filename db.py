@@ -9,8 +9,11 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self, db_url: Optional[str] = None, db_name: Optional[str] = None):
+        # Env Priority: Stage/Prod specific > DATABASE_URL (legacy/local) > MONGODB_URI (generic)
         self.db_url = (
             db_url
+            or os.getenv("MONGO_URI_STAGE")
+            or os.getenv("MONGO_URI_PROD")
             or os.getenv("DATABASE_URL")
             or os.getenv("MONGO_URI")
             or os.getenv("MONGODB_URI")

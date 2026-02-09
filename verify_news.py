@@ -7,11 +7,15 @@ from dotenv import load_dotenv
 def verify():
     load_dotenv()
     db_url = (
-        os.getenv("DATABASE_URL") or os.getenv("MONGO_URI") or os.getenv("MONGODB_URI")
+        os.getenv("MONGO_URI_STAGE")
+        or os.getenv("MONGO_URI_PROD")
+        or os.getenv("DATABASE_URL")
+        or os.getenv("MONGO_URI")
+        or os.getenv("MONGODB_URI")
     )
     if not db_url:
         print(
-            "❌ MongoDB connection URL not found (checked DATABASE_URL, MONGO_URI, MONGODB_URI)"
+            "❌ MongoDB connection URL not found (checked MONGO_URI_STAGE, MONGO_URI_PROD, DATABASE_URL, MONGO_URI, MONGODB_URI)"
         )
         return
 
