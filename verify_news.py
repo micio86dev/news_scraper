@@ -6,10 +6,18 @@ from dotenv import load_dotenv
 
 def verify():
     load_dotenv()
-    db_url = os.getenv("DATABASE_URL")
+    db_url = (
+        os.getenv("DATABASE_URL") or os.getenv("MONGO_URI") or os.getenv("MONGODB_URI")
+    )
     if not db_url:
-        print("DATABASE_URL not found")
+        print(
+            "❌ MongoDB connection URL not found (checked DATABASE_URL, MONGO_URI, MONGODB_URI)"
+        )
         return
+
+    # Log attempt (obfuscated)
+    safe_uri = db_url.split("@")[-1] if "@" in db_url else db_url
+    print(f"🔌 Testing connection to MongoDB at {safe_uri}...")
 
     client = MongoClient(db_url)
     db = client.get_database()

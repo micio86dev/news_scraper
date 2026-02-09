@@ -9,14 +9,25 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self, db_url: Optional[str] = None, db_name: Optional[str] = None):
-        self.db_url = db_url or os.getenv("DATABASE_URL")
+        self.db_url = (
+            db_url
+            or os.getenv("DATABASE_URL")
+            or os.getenv("MONGO_URI")
+            or os.getenv("MONGODB_URI")
+        )
         # Support MONGO_DB env var for explicit database selection
         self.db_name = db_name or os.getenv("MONGO_DB")
 
         if not self.db_url:
-            raise ValueError("DATABASE_URL not found in environment variables.")
+            raise ValueError(
+                "MongoDB connection URL not found in environment variables (checked DATABASE_URL, MONGO_URI, MONGODB_URI)."
+            )
 
         try:
+            # Log connection attempt (obfuscated URI)
+            safe_uri = self.db_url.split("@")[-1] if "@" in self.db_url else self.db_url
+            logger.info(f"Connecting to MongoDB at {safe_uri}")
+
             self.client = MongoClient(self.db_url)
 
             # If explicit DB name is provided, use it. Otherwise fall back to URI default.
