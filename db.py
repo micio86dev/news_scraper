@@ -33,6 +33,24 @@ class Database:
 
             self.client = MongoClient(self.db_url)
 
+            # Smart Fallback for Stage: if localhost:27017 fails, try 27018
+            try:
+                self.client.admin.command("ping")
+            except Exception as e:
+                is_stage = (self.db_name and "stage" in self.db_name) or (
+                    "stage" in self.db_url
+                )
+                if "localhost" in self.db_url and "27017" in self.db_url and is_stage:
+                    logger.warning(
+                        f"Connection to localhost:27017 failed for stage. Retrying on port 27018... Error: {e}"
+                    )
+                    fallback_url = self.db_url.replace("27017", "27018")
+                    self.client = MongoClient(fallback_url)
+                    self.client.admin.command("ping")
+                    logger.info("Fallback connection to localhost:27018 successful.")
+                else:
+                    raise e
+
             # If explicit DB name is provided, use it. Otherwise fall back to URI default.
             if self.db_name:
                 self.db = self.client[self.db_name]
