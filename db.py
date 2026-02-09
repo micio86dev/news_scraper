@@ -31,28 +31,36 @@ class Database:
             safe_uri = self.db_url.split("@")[-1] if "@" in self.db_url else self.db_url
             logger.info(f"Connecting to MongoDB at {safe_uri}")
 
-            self.client = MongoClient(self.db_url)
+            # Smart Connection Logic for Stage on Localhost
+            # Issue: If 27017 (Prod) is running, the scraper connects to it by default even if we want Stage.
+            # Fix: If we detect 'stage' in DB/URI and we are on localhost:27017, FORCE 27018.
+            is_stage = (self.db_name and "stage" in self.db_name) or (
+                "stage" in self.db_url
+            )
 
-            # Smart Fallback for Stage: if localhost:27017 fails, try 27018
+            if "localhost" in self.db_url and "27017" in self.db_url and is_stage:
+                logger.info("🕵️‍♂️ DETECTED STAGE ENVIRONMENT ON LOCALHOST:27017")
+                logger.warning(
+                    "🚀 PROACTIVELY SWITCHING TO PORT 27018 TO AVOID PRODUCTION DB!"
+                )
+
+                self.db_url = self.db_url.replace("27017", "27018")
+                # We must use directConnection=True to bypass replica set discovery if any
+                self.client = MongoClient(
+                    self.db_url, directConnection=True, authSource="admin"
+                )
+            else:
+                # Standard connection
+                self.client = MongoClient(self.db_url)
+
+            # Trigger connection with Ping
             try:
                 self.client.admin.command("ping")
+                logger.info(f"✅ Connection successful to {self.db_url.split('@')[-1]}")
             except Exception as e:
-                is_stage = (self.db_name and "stage" in self.db_name) or (
-                    "stage" in self.db_url
-                )
-                if "localhost" in self.db_url and "27017" in self.db_url and is_stage:
-                    logger.warning(
-                        f"Connection to localhost:27017 failed for stage. Retrying on port 27018... Error: {e}"
-                    )
-                    fallback_url = self.db_url.replace("27017", "27018")
-                    # Force direct connection and authSource=admin
-                    self.client = MongoClient(
-                        fallback_url, directConnection=True, authSource="admin"
-                    )
-                    self.client.admin.command("ping")
-                    logger.info("Fallback connection to localhost:27018 successful.")
-                else:
-                    raise e
+                # Fallback: Check if we are on 27018 and it failed, maybe revert or just log
+                logger.error(f"❌ Connection failed: {e}")
+                raise e
 
             # If explicit DB name is provided, use it. Otherwise fall back to URI default.
             if self.db_name:
