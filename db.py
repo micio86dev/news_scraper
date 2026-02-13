@@ -9,16 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self, db_url: Optional[str] = None, db_name: Optional[str] = None):
-        # Env Priority: Stage/Prod specific > DATABASE_URL (legacy/local) > MONGODB_URI (generic)
-        self.db_url = (
-            db_url
-            or os.getenv("MONGO_URI_STAGE")
-            or os.getenv("MONGO_URI_PROD")
-            or os.getenv("DATABASE_URL")
-            or os.getenv("MONGO_URI")
-            or os.getenv("MONGODB_URI")
-        )
-        # Support MONGO_DB env var for explicit database selection
+        self.db_url = db_url or os.getenv("DATABASE_URL")
         self.db_name = db_name or os.getenv("MONGO_DB")
 
         if not self.db_url:
@@ -27,42 +18,12 @@ class Database:
             )
 
         try:
-            # Log connection attempt (obfuscated URI)
             safe_uri = self.db_url.split("@")[-1] if "@" in self.db_url else self.db_url
             logger.info(f"Connecting to MongoDB at {safe_uri}")
 
-            # Smart Connection Logic for Stage on Localhost
-            # Issue: If 27017 (Prod) is running, the scraper connects to it by default even if we want Stage.
-            # Fix: If we detect 'stage' in DB/URI and we are on localhost:27017, FORCE 27018.
-            is_stage = (self.db_name and "stage" in self.db_name) or (
-                "stage" in self.db_url
-            )
+            self.client = MongoClient(self.db_url)
 
-            if "localhost" in self.db_url and "27017" in self.db_url and is_stage:
-                logger.info("🕵️‍♂️ DETECTED STAGE ENVIRONMENT ON LOCALHOST:27017")
-                logger.warning(
-                    "🚀 PROACTIVELY SWITCHING TO PORT 27018 TO AVOID PRODUCTION DB!"
-                )
-
-                self.db_url = self.db_url.replace("27017", "27018")
-                # We must use directConnection=True to bypass replica set discovery if any
-                self.client = MongoClient(
-                    self.db_url, directConnection=True, authSource="admin"
-                )
-            else:
-                # Standard connection
-                self.client = MongoClient(self.db_url)
-
-            # Trigger connection with Ping
-            try:
-                self.client.admin.command("ping")
-                logger.info(f"✅ Connection successful to {self.db_url.split('@')[-1]}")
-            except Exception as e:
-                # Fallback: Check if we are on 27018 and it failed, maybe revert or just log
-                logger.error(f"❌ Connection failed: {e}")
-                raise e
-
-            # If explicit DB name is provided, use it. Otherwise fall back to URI default.
+            # Use explicit DB name if provided, otherwise fallback to URI default
             if self.db_name:
                 self.db = self.client[self.db_name]
             else:
@@ -70,7 +31,7 @@ class Database:
 
             self.collection = self.db.news
             self._ensure_indexes()
-            logger.info("Connected to MongoDB")
+            logger.info(f"Connected to MongoDB (database: {self.db.name})")
         except Exception as e:
             logger.error(f"Failed to connect to MongoDB: {e}")
             raise
