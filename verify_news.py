@@ -25,14 +25,31 @@ def verify():
 
     # Smart Fallback Logic for Verification
     try:
-        client = MongoClient(
-            db_url, serverSelectionTimeoutMS=5000, directConnection=True
-        )
+        client = MongoClient(db_url, serverSelectionTimeoutMS=5000)
         client.admin.command("ping")
         print("✅ Connection successful")
     except Exception as e:
-        print(f"❌ Connection failed: {e}")
-        return
+        is_stage = "stage" in db_url
+        if "localhost" in db_url and "27017" in db_url and is_stage:
+            print(
+                f"⚠️ Connection to localhost:27017 failed. Retrying on port 27018 (Smart Fallback)..."
+            )
+            fallback_url = db_url.replace("27017", "27018")
+            try:
+                client = MongoClient(
+                    fallback_url,
+                    serverSelectionTimeoutMS=5000,
+                    directConnection=True,
+                    authSource="admin",
+                )
+                client.admin.command("ping")
+                print("✅ Fallback connection to localhost:27018 successful")
+            except Exception as fallback_e:
+                print(f"❌ Fallback connection failed: {fallback_e}")
+                return
+        else:
+            print(f"❌ Connection failed: {e}")
+            return
 
     db = client.get_database()
     collection = db.news

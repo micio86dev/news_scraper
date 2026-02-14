@@ -21,7 +21,7 @@ class Database:
             safe_uri = self.db_url.split("@")[-1] if "@" in self.db_url else self.db_url
             logger.info(f"Connecting to MongoDB at {safe_uri}")
 
-            self.client = MongoClient(self.db_url, directConnection=True)
+            self.client = MongoClient(self.db_url)
 
             # Use explicit DB name if provided, otherwise fallback to URI default
             if self.db_name:
