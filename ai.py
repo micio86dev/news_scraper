@@ -34,7 +34,7 @@ def _build_prompt(title: str, content: str) -> str:
         - Science news unrelated to computing
 
         Title: {title}
-        Content: {content[:10000]}
+        Content: {content[:4000]}
 
         Output Fields:
         - is_relevant: Boolean (true if it matches the inclusion criteria above, false otherwise).
@@ -123,6 +123,7 @@ class NewsAI:
                     ],
                     "response_format": {"type": "json_object"},
                     "temperature": 0.2,
+                    "max_tokens": 8000,
                 },
                 timeout=self.timeout,
             )
@@ -145,6 +146,7 @@ class NewsAI:
                     "generationConfig": {
                         "responseMimeType": "application/json",
                         "temperature": 0.2,
+                        "maxOutputTokens": 8000,
                     },
                 },
                 timeout=self.timeout,
