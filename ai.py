@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 import requests
 
@@ -13,6 +13,19 @@ GEMINI_URL = (
 )
 
 _SYSTEM_PROMPT = "You are a tech news editor and analyst."
+
+
+def _coerce_to_dict(parsed: Any) -> Optional[Dict]:
+    # LLMs occasionally return a top-level JSON array even with json_object mode
+    # set — drop list-only responses; unwrap a 1-element list of dicts.
+    if isinstance(parsed, dict):
+        return parsed
+    if isinstance(parsed, list) and len(parsed) == 1 and isinstance(parsed[0], dict):
+        return parsed[0]
+    logger.warning(
+        f"AI response is not a dict (got {type(parsed).__name__}); skipping."
+    )
+    return None
 
 
 def _build_prompt(title: str, content: str) -> str:
@@ -129,7 +142,7 @@ class NewsAI:
             )
             resp.raise_for_status()
             content = resp.json()["choices"][0]["message"]["content"]
-            return json.loads(content)
+            return _coerce_to_dict(json.loads(content))
         except Exception as e:
             logger.error(f"Error processing news with Groq: {e}")
             return None
@@ -153,7 +166,7 @@ class NewsAI:
             )
             resp.raise_for_status()
             text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
-            return json.loads(text)
+            return _coerce_to_dict(json.loads(text))
         except Exception as e:
             logger.error(f"Error processing news with Gemini: {e}")
             return None
