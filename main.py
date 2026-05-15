@@ -169,6 +169,13 @@ def main():
             # AI Processing
             ai_data = ai.process_article(article["title"], article["content_raw"])
 
+            if ai_data is not None and not isinstance(ai_data, dict):
+                logger.warning(
+                    f"AI response for {article['title']} has unexpected shape "
+                    f"({type(ai_data).__name__}); discarding and using fallback."
+                )
+                ai_data = None
+
             if not ai_data:
                 logger.warning(
                     f"AI processing failed for {article['title']}. key content: {article['content_raw'][:50]}..."
